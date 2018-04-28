@@ -20,6 +20,8 @@ public class Item {
     
     public var angle: Double?
     
+    public var radarPosition: (circleIndex: Int, originIndex: Int) = (0, 0)
+    
     convenience init(uniqueKey: String, value: Any, distance: Double, angle: Double) {
         self.init(uniqueKey: uniqueKey, value: value)
         self.distance = distance
@@ -35,24 +37,17 @@ public class Item {
         self.uniqueKey = uniqueKey
         self.value = value
     }
-
-    public func preferredCircleIndex(in count: Int) -> Int {
-        guard let distance = distance else {
-            var randomIndex = Int(arc4random_uniform(UInt32(count)))
-            return randomIndex
-        }
-        var index = 0
-        return index
-    }
     
-    public func preferredIndex(in circle: Circle) -> Int {
-        let count = circle.availablePoints.count
-        guard let angle = angle else {
-            var randomIndex = Int(arc4random_uniform(UInt32(count)))
-            return randomIndex
-        }
-        var index = 0
-        return index
+}
+
+extension Item {
+    
+    // Private Methods
+    
+    private func calculatePosition() {
+        let circleIndex = 1
+        let positionIndex = 3
+        radarPosition = (circleIndex, positionIndex)
     }
     
 }

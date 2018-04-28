@@ -66,6 +66,20 @@ public class RippleView: UIView {
     
     // MARK: Public Properties
     
+    @IBInspectable public var minDistance: Double = 0 {
+        didSet {
+            redrawDisks()
+            redrawCircles()
+        }
+    }
+    
+    @IBInspectable public var maxDistance: Double = 20000 {
+        didSet {
+            redrawDisks()
+            redrawCircles()
+        }
+    }
+    
     /// The radius of the disk in the view center, the default value is 5
     @IBInspectable public var diskRadius: CGFloat = 5 {
         didSet {
@@ -206,21 +220,24 @@ public class RippleView: UIView {
     }
 
     /// Redraws circles by deleting old ones and drawing new ones, this method is called, for example, when the number of circles changed
-     func redrawCircles() {
+    func redrawCircles(with itemRadius: CGFloat = circleDefaultItemRadius, paddingBetweenItems: CGFloat = circleDefaultPaddingBetweenItems) {
         circleLayers.forEach {
             $0.removeFromSuperlayer()
         }
         circleLayers.removeAll()
         circles.removeAll()
         for i in 0 ..< numberOfCircles {
-            drawCircle(with: i)
+            drawCircle(with: i, itemRadius, paddingBetweenItems)
         }
     }
     
     /// Draws the circle by using the index to calculate the radius
     ///
     /// - Parameter index: the index of the circle
-    private func drawCircle(with index: Int) {
+    private func drawCircle(with index: Int, _ itemRadius: CGFloat = circleDefaultItemRadius, _ paddingBetweenItems: CGFloat = circleDefaultPaddingBetweenItems) {
+        let distanceInterval: Double = (maxDistance - minDistance) / Double(numberOfCircles)
+        let minDistanceForCircle = index == 0 ? minDistance : Double(index) * distanceInterval
+        let maxDistanceForCircle = index == numberOfCircles - 1 ? maxDistance : Double(index + 1) * distanceInterval
         let radius = radiusOfCircle(at: index)
         if radius > maxCircleRadius { return }
         let origin = bounds.center
@@ -228,7 +245,7 @@ public class RippleView: UIView {
         circleLayer.lineWidth = 2.0
         circleLayers.append(circleLayer)
         self.layer.addSublayer(circleLayer)
-        circles.append(Circle(name: "C\(index + 1)", origin: origin, radius: radius))
+        circles.append(Circle(name: "C\(index + 1)", itemRadius: itemRadius, paddingBetweenItems: paddingBetweenItems, origin: origin, radius: radius, distanceRange: (minDistanceForCircle...maxDistanceForCircle)))
     }
     
     // MARK: Animation methods
@@ -237,7 +254,6 @@ public class RippleView: UIView {
     private func animateSublayers() {
         animateCentralDisk()
         animateCircles()
-        
         startAnimation()
     }
     

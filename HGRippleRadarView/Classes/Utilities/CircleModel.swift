@@ -11,23 +11,25 @@ class CircleModel {
     
     var items: [Item] = []
     
-    func add(_ item: Item) -> Bool {
+    @discardableResult func add(_ item: Item) -> Bool {
         if items.contains(item) { return false }
         items.append(item)
+        //print("Added")
         return true
     }
     
-    func remove(_ item: Item) -> Bool {
+    @discardableResult func remove(_ item: Item) -> Bool {
         if !items.contains(item) { return false }
         if let index = items.index(of: item) {
-            return remove(index)
+            return self.remove(index)
         }
         return false
     }
     
-    func remove(_ index: Int) -> Bool {
+    @discardableResult func remove(_ index: Int) -> Bool {
         if index < 0 || index >= items.count { return false }
         items.remove(at: index)
+        //print("Removed")
         return true
     }
     

@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ItemView {
+public class ItemView {
     
     let view: UIView
     
@@ -16,6 +16,14 @@ class ItemView {
     init(view: UIView, item: Item) {
         self.view = view
         self.item = item
+    }
+    
+}
+
+extension ItemView: Equatable {
+    
+    public static func ==(lhs: ItemView, rhs: ItemView) -> Bool {
+        return lhs.item.uniqueKey == rhs.item.uniqueKey
     }
     
 }

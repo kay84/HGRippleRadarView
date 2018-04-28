@@ -23,7 +23,7 @@ final public class RadarView: RippleView {
     }
     
     /// The padding between items, the default value is 10
-    @IBInspectable public var paddingBetweenItems: CGFloat = 10 {
+    @IBInspectable public var paddingBetweenItems: CGFloat = circleDefaultPaddingBetweenItems {
         didSet {
             redrawItems()
         }
@@ -98,8 +98,8 @@ final public class RadarView: RippleView {
         super.setup()
     }
     
-    override func redrawCircles() {
-        super.redrawCircles()
+    override func redrawCircles(with itemRadius: CGFloat, paddingBetweenItems: CGFloat) {
+        super.redrawCircles(with: self.itemRadius, paddingBetweenItems: self.paddingBetweenItems)
         redrawItems()
     }
     
@@ -117,6 +117,16 @@ final public class RadarView: RippleView {
     
     // MARK: Utilities methods
     
+    private func circleIndex(forItem item: Item?) -> Int? {
+        guard let item = item else { return nil }
+        for (index, circle) in circles.enumerated() {
+            if let range = circle.distanceRange, let distance = item.distance, range.contains(distance) {
+                return index
+            }
+        }
+        return nil
+    }
+    
     /// Add item layer to radar view
     ///
     /// - Parameters:
@@ -124,28 +134,30 @@ final public class RadarView: RippleView {
     ///   - animation: the animation used to show the item layer
     private func add(_ item: Item, using animation: CAAnimation? = Animation.transform()) {
         
-        let circlesCount = circles.count
+        guard let index = circleIndex(forItem: item) else { return }
         
-        let circleIndex = item.preferredCircleIndex(in: circlesCount)
-        
-        let circle = circles[circleIndex]
+        let circle = circles[index]
         
         if circle.availablePoints.count == 0 {
             print("There is no available room for item in circle \(circle.name)")
             return
         }
         
-        circle.add(item: item)
-
-        guard let origin = circle.origin(forItem: item) else { return }
+        guard let originIndex = circle.originIndex(forItem: item) else { return }
+        if originIndex < 0 || originIndex > circle.availablePoints.count { return }
+        
+        let origin = circle.availablePoints[originIndex]
         
         let preferredSize = CGSize(width: itemRadius*2, height: itemRadius*2)
         let customView = dataSource?.radarView(radarView: self, viewFor: item, preferredSize: preferredSize)
-        let itemView = addItem(view: customView, with: origin, and: animation)
-        let itemLayer = ItemView(view: itemView, item: item)
-        self.addSubview(itemView)
         
-        circle.itemViews.append(itemLayer)
+        let view = addItem(view: customView, with: origin, and: animation)
+        
+        let itemView = ItemView(view: view, item: item)
+        
+        self.addSubview(view)
+        
+        circle.add(itemView: itemView, at: originIndex)
         
     }
     
@@ -247,12 +259,11 @@ extension RadarView {
     ///
     /// - Parameter item: the item to remove from Radar View
     public func remove(item: Item) {
-        let circleIndex = item.preferredCircleIndex(in: circles.count)
-        let circle = circles[circleIndex]
+        guard let index = circleIndex(forItem: item) else { return }
+        let circle = circles[index]
         guard let itemView = circle.itemView(forItem: item) else { return }
-        guard let itemViewIndex = circle.itemViewIndex(forItem: item) else { return }
         removeWithAnimation(view: itemView.view)
-        circle.itemViews.remove(at: itemViewIndex)
+        circle.remove(itemView: itemView)
     }
     
     /// Returns the view of the item
@@ -260,8 +271,8 @@ extension RadarView {
     /// - Parameter item: the item
     /// - Returns: the layer of the item with the index
     public func view(for item: Item) -> UIView? {
-        let circleIndex = item.preferredCircleIndex(in: circles.count)
-        let circle = circles[circleIndex]
+        guard let index = circleIndex(forItem: item) else { return nil }
+        let circle = circles[index]
         guard let itemView = circle.itemView(forItem: item) else { return nil }
         return itemView.view
     }

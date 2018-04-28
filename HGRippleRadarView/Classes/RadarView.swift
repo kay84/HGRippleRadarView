@@ -17,10 +17,9 @@ final public class RadarView: RippleView {
     
     /// the maximum number of items that can be shown in the radar view, if you use more, some layers will overlaying other layers
     public var radarCapacity: Int {
-        if allPossiblePositions.isEmpty {
-            findPossiblePositions()
-        }
-        return allPossiblePositions.count
+        var capacity = 0
+        circles.forEach { capacity += $0.allPoints.count }
+        return capacity
     }
     
     /// The padding between items, the default value is 10
@@ -66,15 +65,6 @@ final public class RadarView: RippleView {
     
     // MARK: private properties
     
-    /// All possible positions to draw item in the radar view, you can have more positions if you have more circles
-    private var allPossiblePositions = [CGPoint]()
-    
-    /// All available position to draw items
-    private var availablePositions = [CGPoint]()
-    
-    /// items drawn in the radar view
-    private var itemsViews = [ItemView]()
-    
     /// layer to remove after hidden animation
     private var viewToRemove: UIView?
     
@@ -110,83 +100,53 @@ final public class RadarView: RippleView {
     
     override func redrawCircles() {
         super.redrawCircles()
-        
         redrawItems()
     }
     
     private func redrawItems() {
-        // remove all items and redraw them in the right positions
-        let items = itemsViews
-        allPossiblePositions.removeAll()
-        availablePositions.removeAll()
-        itemsViews.removeAll()
-        
-        findPossiblePositions()
-        availablePositions = allPossiblePositions
-        
-        items.forEach {
-            let view = $0.view
-            view.layer.removeAllAnimations()
-            view.removeFromSuperview()
-            var index = $0.index
-            add(item: $0.item, at: &index, using: nil)
+        circles.forEach { circle in
+            circle.clear()
+            circle.itemViews.forEach { itemView in
+                let view = itemView.view
+                view.layer.removeAllAnimations()
+                view.removeFromSuperview()
+                add(item: itemView.item, using: nil)
+            }
         }
     }
     
     // MARK: Utilities methods
     
-    /// browse circles and find possible position to draw layer
-    private func findPossiblePositions() {
-        for (index, layer) in circlesLayer.enumerated() {
-            let origin = layer.position
-            let radius = radiusOfCircle(at: index)
-            let circle = Circle(origin: origin, radius:radius)
-            
-            // we calculate the capacity using: (2π * r1 / 2 * r2) ; r2 = (itemRadius + padding/2)
-            let capicity = (radius * CGFloat.pi) / (itemRadius + paddingBetweenItems/2)
-            
-            /*
-             Random Angle is used  to don't have the gap in the same place, we should find a better solution
-             for example, dispatch the gap as padding between items
-             let randomAngle = CGFloat(arc4random_uniform(UInt32(Float.pi * 2)))
-             */
-            for index in 0 ..< Int(capicity) {
-                let angle = ((CGFloat(index) * 2 * CGFloat.pi) / CGFloat(capicity))/* + randomAngle */
-                let itemOrigin = Geometry.point(in: angle, of: circle)
-                allPossiblePositions.append(itemOrigin)
-            }
-        }
-    }
-    
     /// Add item layer to radar view
     ///
     /// - Parameters:
     ///   - item: item to add to the radar view
-    ///   - index: the index of the item layer (position)
     ///   - animation: the animation used to show the item layer
-    private func add(item: Item, at index: inout Int, using animation: CAAnimation? = Animation.transform()) {
+    private func add(item: Item, using animation: CAAnimation? = Animation.transform()) {
         
-        if allPossiblePositions.isEmpty {
-            findPossiblePositions()
-        }
-        if availablePositions.count == 0 {
-            print("HGRipplerRadarView Warning: you use more than the capacity of the radar view, some layers will overlaying other layers")
-            availablePositions = allPossiblePositions
+        let circlesCount = circles.count
+        
+        let circleIndex = item.preferredCircleIndex(in: circlesCount)
+        
+        let circle = circles[circleIndex]
+        
+        if circle.availablePoints.count == 0 {
+            print("There is no available room for item in circle \(circle.name)")
+            return
         }
         
-        // try to draw the item in a precise position, if it's not possible, a random index is used
-        if index >= availablePositions.count {
-            index = Int(arc4random_uniform(UInt32(availablePositions.count)))
-        }
-        let origin = availablePositions[index]
-        availablePositions.remove(at: index)
+        circle.add(item: item)
+
+        guard let origin = circle.origin(forItem: item) else { return }
         
         let preferredSize = CGSize(width: itemRadius*2, height: itemRadius*2)
         let customView = dataSource?.radarView(radarView: self, viewFor: item, preferredSize: preferredSize)
         let itemView = addItem(view: customView, with: origin, and: animation)
-        let itemLayer = ItemView(view: itemView, item: item, index: index)
+        let itemLayer = ItemView(view: itemView, item: item)
         self.addSubview(itemView)
-        itemsViews.append(itemLayer)
+        
+        circle.itemViews.append(itemLayer)
+        
     }
     
     private func addItem(view: UIView?, with origin: CGPoint, and animation: CAAnimation?) -> UIView {
@@ -224,21 +184,26 @@ final public class RadarView: RippleView {
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         let touch = touches.first
         guard let point = touch?.location(in: self) else { return }
-        guard let index = itemsViews.index(where: {
-            return $0.view.frame.contains(point)
-        }) else {
-            currentItemView = nil
-            return
+        var index = -1
+        var circle: Circle?
+        for i in 0..<circles.count {
+            circle = circles[i]
+            if let i = circle?.itemViews.index(where: { return $0.view.frame.contains(point) }) {
+                index = i
+                return
+            }
         }
-        
-        let item = itemsViews[index]
-        if item === currentItemView { return }
-        currentItemView = item
-        
-        let itemView = item.view
-        self.bringSubview(toFront: itemView)
-        let animation = Animation.opacity(from: 0.3, to: 1.0)
-        itemView.layer.add(animation, forKey: "opacity")
+        if let circle = circle, index >= 0, index < circle.itemViews.count {
+            let item = circle.itemViews[index]
+            if item === currentItemView { return }
+            currentItemView = item
+            let itemView = item.view
+            self.bringSubview(toFront: itemView)
+            let animation = Animation.opacity(from: 0.3, to: 1.0)
+            itemView.layer.add(animation, forKey: "opacity")
+        } else {
+            currentItemView = nil
+        }
     }
 }
 
@@ -275,26 +240,19 @@ extension RadarView {
     ///   - item: the item to add to the radar view
     ///   - animation: the animation used to show  items layers
     public func add(item: Item, using animation: CAAnimation = Animation.transform()) {
-        if allPossiblePositions.isEmpty {
-            findPossiblePositions()
-        }
-        
-        let count = availablePositions.count == 0 ? allPossiblePositions.count : availablePositions.count
-        var randomIndex = Int(arc4random_uniform(UInt32(count)))
-        add(item: item, at: &randomIndex, using: animation)
+        add(item: item, using: animation)
     }
     
     /// Remove item layer from the radar view
     ///
     /// - Parameter item: the item to remove from Radar View
     public func remove(item: Item) {
-        guard let index = itemsViews.index(where: { $0.item.uniqueKey == item.uniqueKey }) else {
-            print("\(String(describing: item.uniqueKey)) not found")
-            return
-        }
-        let item = itemsViews[index]
-        removeWithAnimation(view: item.view)
-        itemsViews.remove(at: index)
+        let circleIndex = item.preferredCircleIndex(in: circles.count)
+        let circle = circles[circleIndex]
+        guard let itemView = circle.itemView(forItem: item) else { return }
+        guard let itemViewIndex = circle.itemViewIndex(forItem: item) else { return }
+        removeWithAnimation(view: itemView.view)
+        circle.itemViews.remove(at: itemViewIndex)
     }
     
     /// Returns the view of the item
@@ -302,9 +260,12 @@ extension RadarView {
     /// - Parameter item: the item
     /// - Returns: the layer of the item with the index
     public func view(for item: Item) -> UIView? {
-        guard let index = itemsViews.index(where: { $0.item === item }) else { return nil }
-        return itemsViews[index].view
+        let circleIndex = item.preferredCircleIndex(in: circles.count)
+        let circle = circles[circleIndex]
+        guard let itemView = circle.itemView(forItem: item) else { return nil }
+        return itemView.view
     }
+    
 }
 
 extension Drawer {
@@ -322,6 +283,5 @@ extension Drawer {
         view.layer.cornerRadius = radius
         view.clipsToBounds = true
         view.backgroundColor = color
-        
         return view
     }}

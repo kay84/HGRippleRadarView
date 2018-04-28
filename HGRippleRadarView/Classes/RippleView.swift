@@ -29,10 +29,10 @@ public class RippleView: UIView {
     
     /// The duration to animate one circle
     private var circleAnimationDuration: CFTimeInterval {
-        if circlesLayer.count ==  0 {
+        if circleLayers.count ==  0 {
             return CFTimeInterval(animationDuration)
         }
-        return CFTimeInterval(animationDuration) / CFTimeInterval(circlesLayer.count)
+        return CFTimeInterval(animationDuration) / CFTimeInterval(circleLayers.count)
     }
     
     /// The timer used to start / stop circles animation
@@ -52,7 +52,8 @@ public class RippleView: UIView {
     }
     
     /// the circles surrounding the disk
-    var circlesLayer = [CAShapeLayer]()
+    var circleLayers = [CAShapeLayer]()
+    var circles = [Circle]()
     
     /// The padding between circles
     var circlesPadding: CGFloat {
@@ -98,7 +99,7 @@ public class RippleView: UIView {
     /// The color of the off status of the circle, used for animation
     @IBInspectable public var circleOffColor: UIColor = .rippleDark {
         didSet {
-            circlesLayer.forEach {
+            circleLayers.forEach {
                 $0.strokeColor = circleOffColor.cgColor
             }
         }
@@ -175,7 +176,7 @@ public class RippleView: UIView {
         
         diskLayer.position = bounds.center
         centerAnimatedLayer.position = bounds.center
-        circlesLayer.forEach {
+        circleLayers.forEach {
             $0.position = bounds.center
         }
     }
@@ -206,10 +207,11 @@ public class RippleView: UIView {
 
     /// Redraws circles by deleting old ones and drawing new ones, this method is called, for example, when the number of circles changed
      func redrawCircles() {
-        circlesLayer.forEach {
+        circleLayers.forEach {
             $0.removeFromSuperlayer()
         }
-        circlesLayer.removeAll()
+        circleLayers.removeAll()
+        circles.removeAll()
         for i in 0 ..< numberOfCircles {
             drawCircle(with: i)
         }
@@ -221,11 +223,12 @@ public class RippleView: UIView {
     private func drawCircle(with index: Int) {
         let radius = radiusOfCircle(at: index)
         if radius > maxCircleRadius { return }
-        
-        let circleLayer = Drawer.circleLayer(radius: radius, origin: bounds.center, color: circleOffColor.cgColor)
+        let origin = bounds.center
+        let circleLayer = Drawer.circleLayer(radius: radius, origin: origin, color: circleOffColor.cgColor)
         circleLayer.lineWidth = 2.0
-        circlesLayer.append(circleLayer)
+        circleLayers.append(circleLayer)
         self.layer.addSublayer(circleLayer)
+        circles.append(Circle(name: "C\(index + 1)", origin: origin, radius: radius))
     }
     
     // MARK: Animation methods
@@ -250,12 +253,12 @@ public class RippleView: UIView {
     
     /// Animates circles by changing color from off to on color
     @objc private func animateCircles() {
-        for index in 0 ..< circlesLayer.count {
+        for index in 0 ..< circleLayers.count {
             let colorAnimation = Animation.color(from: circleOffColor.cgColor, to: circleOnColor.cgColor)
             colorAnimation.duration = circleAnimationDuration
             colorAnimation.autoreverses = true
             colorAnimation.beginTime = CACurrentMediaTime() + CFTimeInterval(circleAnimationDuration * Double(index))
-            circlesLayer[index].add(colorAnimation, forKey: "strokeColor")
+            circleLayers[index].add(colorAnimation, forKey: "strokeColor")
         }
     }
 }

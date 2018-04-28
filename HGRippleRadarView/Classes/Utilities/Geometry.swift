@@ -14,18 +14,6 @@ extension CGRect {
     }
 }
 
-struct Circle {
-    var origin = CGPoint.zero
-    var radius: CGFloat = 0
-    
-    public init(origin: CGPoint, radius: CGFloat) {
-        assert(radius >= 0, NSLocalizedString("Illegal radius value", comment: ""))
-        
-        self.origin = origin
-        self.radius = radius
-    }
-}
-
 struct Geometry {
 
     /**

@@ -122,7 +122,7 @@ final public class RadarView: RippleView {
     /// - Parameters:
     ///   - item: item to add to the radar view
     ///   - animation: the animation used to show the item layer
-    private func add(item: Item, using animation: CAAnimation? = Animation.transform()) {
+    private func add(_ item: Item, using animation: CAAnimation? = Animation.transform()) {
         
         let circlesCount = circles.count
         
@@ -230,7 +230,7 @@ extension RadarView {
     public func add(items: [Item], using animation: CAAnimation = Animation.transform()) {
         for index in 0 ..< items.count {
             animation.beginTime = CACurrentMediaTime() + CFTimeInterval(animation.duration/2 * Double(index))
-            self.add(item: items[index], using: animation)
+            self.add(items[index], using: animation)
         }
     }
     
@@ -240,7 +240,7 @@ extension RadarView {
     ///   - item: the item to add to the radar view
     ///   - animation: the animation used to show  items layers
     public func add(item: Item, using animation: CAAnimation = Animation.transform()) {
-        add(item: item, using: animation)
+        self.add(item, using: animation)
     }
     
     /// Remove item layer from the radar view

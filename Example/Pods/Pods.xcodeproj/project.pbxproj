@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		00D2111EC480F7A6071D461312207AB1 /* RadarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0639348031B3F6811195B6BB177AD18 /* RadarView.swift */; };
 		055FF8FA64749A26564AB9FAAE349F7F /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA29D6B56B90EB8799E14E6A23A817DC /* Configuration.swift */; };
 		126EEE2720949DB700F03F02 /* Circle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126EEE2620949DB700F03F02 /* Circle.swift */; };
 		126EEE292094A39D00F03F02 /* CircleModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126EEE282094A39D00F03F02 /* CircleModel.swift */; };
@@ -16,7 +15,7 @@
 		1F39196628064612F5D8BB5FE29C75A4 /* RadarViewProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4345262F649A41DD6B065AB3F4582D4D /* RadarViewProtocol.swift */; };
 		23DA13E03C96E16AD2F683050F43392D /* TouchVisualizer-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 9197E2D8328DEB880B89C8B840AFF39F /* TouchVisualizer-dummy.m */; };
 		568A4F26270E55AC92BE1F0C17246895 /* Drawer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D3760F111A3493C869D49102251DB72 /* Drawer.swift */; };
-		5811A24D1FBB8B3315037CAE8C9CC950 /* RippleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361B225E7A70AEB1B726721006283B7D /* RippleView.swift */; };
+		5811A24D1FBB8B3315037CAE8C9CC950 /* RadarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361B225E7A70AEB1B726721006283B7D /* RadarView.swift */; };
 		69066406AB35C8E42BEE0698375394D2 /* TouchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889F93D4387F004C41F72906B9F9D59 /* TouchView.swift */; };
 		6A55DD2F1360EA3022324F6B3CBCD676 /* UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 025843694F0974319FF59FAF4BA8E91D /* UIColor.swift */; };
 		6DD5742812DA0C8E593E3A96053833EB /* TouchVisualizer-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 3FEEB865158044F28A6C7408E0E10C9D /* TouchVisualizer-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -65,7 +64,7 @@
 		2D3760F111A3493C869D49102251DB72 /* Drawer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Drawer.swift; sourceTree = "<group>"; };
 		2D6D41C0B702063073D73BCE27A9D8BB /* TouchVisualizer.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = "sourcecode.module-map"; path = TouchVisualizer.modulemap; sourceTree = "<group>"; };
 		30382560D8F4848C60EBEAF6AB4D5CE7 /* HGRippleRadarView.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = "sourcecode.module-map"; path = HGRippleRadarView.modulemap; sourceTree = "<group>"; };
-		361B225E7A70AEB1B726721006283B7D /* RippleView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RippleView.swift; path = HGRippleRadarView/Classes/RippleView.swift; sourceTree = "<group>"; };
+		361B225E7A70AEB1B726721006283B7D /* RadarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RadarView.swift; path = HGRippleRadarView/Classes/RadarView.swift; sourceTree = "<group>"; };
 		36F86111BD558EE10067328C9E3CA949 /* Pods-HGRippleRadarView_Example-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-HGRippleRadarView_Example-umbrella.h"; sourceTree = "<group>"; };
 		3FEEB865158044F28A6C7408E0E10C9D /* TouchVisualizer-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "TouchVisualizer-umbrella.h"; sourceTree = "<group>"; };
 		41F5D190E9E7D3362EA6531CA710D856 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -105,7 +104,6 @@
 		DF4DF29FDE295E220599CBD26C934689 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E889F93D4387F004C41F72906B9F9D59 /* TouchView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TouchView.swift; path = TouchVisualizer/TouchView.swift; sourceTree = "<group>"; };
 		EDCD2DD441C2C09C40EB82FA80C5CF59 /* Pods-HGRippleRadarView_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-HGRippleRadarView_Tests.debug.xcconfig"; sourceTree = "<group>"; };
-		F0639348031B3F6811195B6BB177AD18 /* RadarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RadarView.swift; path = HGRippleRadarView/Classes/RadarView.swift; sourceTree = "<group>"; };
 		F2C60E5116DF7B0A2BCD55A3A3396202 /* HGRippleRadarView.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; path = HGRippleRadarView.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		F9921653B5474CB4F8FE8E933CBE2D01 /* TouchVisualizer-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "TouchVisualizer-prefix.pch"; sourceTree = "<group>"; };
 		FD9037CFD941493E0DA5297C8E04E1EF /* Pods-HGRippleRadarView_Example-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-HGRippleRadarView_Example-frameworks.sh"; sourceTree = "<group>"; };
@@ -163,9 +161,8 @@
 			children = (
 				D5E28A45743B448E3A809A1491C32167 /* Item.swift */,
 				7C90AA153D41626595BAB94D35D08764 /* ItemView.swift */,
-				F0639348031B3F6811195B6BB177AD18 /* RadarView.swift */,
 				4345262F649A41DD6B065AB3F4582D4D /* RadarViewProtocol.swift */,
-				361B225E7A70AEB1B726721006283B7D /* RippleView.swift */,
+				361B225E7A70AEB1B726721006283B7D /* RadarView.swift */,
 				014E2D2974EF6AA2C8C614B57B0C9F6E /* Pod */,
 				5F18348BDFD3FE26BDD9D8F35065C480 /* Support Files */,
 				5EC0F182808FBBC77E7A12728F0842B3 /* Utilities */,
@@ -494,9 +491,8 @@
 				168A8A31B0EABB6B5BF60E8869DB9546 /* Item.swift in Sources */,
 				755C45587A488C39B558DC006AE9567B /* ItemView.swift in Sources */,
 				126EEE2720949DB700F03F02 /* Circle.swift in Sources */,
-				00D2111EC480F7A6071D461312207AB1 /* RadarView.swift in Sources */,
 				1F39196628064612F5D8BB5FE29C75A4 /* RadarViewProtocol.swift in Sources */,
-				5811A24D1FBB8B3315037CAE8C9CC950 /* RippleView.swift in Sources */,
+				5811A24D1FBB8B3315037CAE8C9CC950 /* RadarView.swift in Sources */,
 				6A55DD2F1360EA3022324F6B3CBCD676 /* UIColor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

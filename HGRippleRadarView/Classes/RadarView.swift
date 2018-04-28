@@ -110,7 +110,7 @@ final public class RadarView: RippleView {
                 let view = itemView.view
                 view.layer.removeAllAnimations()
                 view.removeFromSuperview()
-                add(item: itemView.item, using: nil)
+                add(itemView.item, using: nil)
             }
         }
     }

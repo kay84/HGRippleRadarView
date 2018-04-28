@@ -69,7 +69,7 @@ public final class RadarView: UIView {
     
     /// the preferable radius of an item
     private var itemRadius: CGFloat {
-        return paddingBetweenCircles / 3
+        return paddingBetweenCircles / 4
     }
     
     private var currentItemView: ItemView? {
@@ -96,7 +96,7 @@ public final class RadarView: UIView {
     
     /// The duration to animate the central disk
     private var centerAnimationDuration: CFTimeInterval {
-        return CFTimeInterval(animationDuration) * 0.90
+        return CFTimeInterval(animationDuration) * 0.75
     }
     
     /// The duration to animate one circle
@@ -145,7 +145,7 @@ public final class RadarView: UIView {
         }
     }
     
-    @IBInspectable public var maxDistance: Double = 20000 {
+    @IBInspectable public var maxDistance: Double = 6000 {
         didSet {
             redrawDisks()
             redrawCircles()
@@ -169,7 +169,7 @@ public final class RadarView: UIView {
     }
     
     /// The number of circles to draw around the disk, the default value is 3, if the forcedMaximumCircleRadius is used the number of drawn circles could be less than numberOfCircles
-    @IBInspectable public var numberOfCircles: Int = 3 {
+    @IBInspectable public var numberOfCircles: Int = 4 {
         didSet {
             redrawCircles()
         }
@@ -351,8 +351,9 @@ extension RadarView {
     
     private func redrawItems() {
         circles.forEach { circle in
+            let itemViews = Array(circle.itemViews)
             circle.clear()
-            circle.itemViews.forEach { itemView in
+            itemViews.forEach { itemView in
                 let view = itemView.view
                 view.layer.removeAllAnimations()
                 view.removeFromSuperview()
@@ -428,7 +429,6 @@ extension RadarView {
         viewToRemove = view
         let hideAnimation = Animation.hide()
         hideAnimation.delegate = self
-        
         view.layer.add(hideAnimation, forKey: nil)
     }
     
@@ -527,8 +527,10 @@ extension RadarView {
         guard let index = circleIndex(forItem: item) else { return }
         let circle = circles[index]
         guard let itemView = circle.itemView(forItem: item) else { return }
-        removeWithAnimation(view: itemView.view)
         circle.remove(itemView: itemView)
+        let view = itemView.view
+        viewToRemove = view
+        removeWithAnimation(view: view)
     }
     
     /// Returns the view of the item

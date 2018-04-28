@@ -77,7 +77,8 @@ public class Circle {
         if let itemViewIndex = itemViews.index(of: itemView) {
             let success = self.remove(item: itemView.item)
             if success {
-                itemViews.remove(at: itemViewIndex)
+                let removedItemView = itemViews.remove(at: itemViewIndex)
+                availablePoints.append(removedItemView.view.center)
             }
         }
         

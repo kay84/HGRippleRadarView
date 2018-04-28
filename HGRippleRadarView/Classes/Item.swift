@@ -22,7 +22,7 @@ public class Item {
     
     public var radarPosition: (circleIndex: Int, originIndex: Int) = (0, 0)
     
-    convenience init(uniqueKey: String, value: Any, distance: Double, angle: Double) {
+    convenience public init(uniqueKey: String, value: Any, distance: Double, angle: Double) {
         self.init(uniqueKey: uniqueKey, value: value)
         self.distance = distance
         self.angle = angle

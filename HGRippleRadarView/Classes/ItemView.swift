@@ -7,7 +7,7 @@
 
 import UIKit
 
-public class ItemView {
+class ItemView {
     
     let view: UIView
     

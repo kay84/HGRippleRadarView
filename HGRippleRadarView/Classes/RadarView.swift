@@ -301,8 +301,8 @@ public final class RadarView: UIView {
     /// - Parameter index: the index of the circle
     private func drawCircle(with index: Int) {
         let distanceInterval: Double = (maxDistance - minDistance) / Double(numberOfCircles)
-        let minDistanceForCircle = index == 0 ? minDistance : Double(index) * distanceInterval
-        let maxDistanceForCircle = index == numberOfCircles - 1 ? maxDistance : Double(index + 1) * distanceInterval
+        let minDistanceForCircle = minDistance + Double(index) * distanceInterval
+        let maxDistanceForCircle = minDistanceForCircle + distanceInterval
         let radius = radiusOfCircle(at: index)
         if radius > maxCircleRadius { return }
         let origin = bounds.center

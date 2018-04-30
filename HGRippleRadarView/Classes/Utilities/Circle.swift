@@ -10,7 +10,7 @@ import Foundation
 public let circleDefaultItemRadius: CGFloat = 10
 public let circleDefaultPaddingBetweenItems: CGFloat = 8
 
-public class Circle {
+class Circle {
     
     var name: String = "Circle"
     
@@ -44,7 +44,7 @@ public class Circle {
         calculatePositions()
     }
     
-    public func originIndex(forItem item: Item) -> Int? {
+    func originIndex(forItem item: Item) -> Int? {
         guard let angle = item.angle else { return nil }
         let point = Geometry.point(in: CGFloat(angle), of: self)
         var originIndex: Int?
@@ -72,7 +72,7 @@ public class Circle {
         return nil
     }
     
-    public func remove(itemView: ItemView?) {
+    func remove(itemView: ItemView?) {
         guard let itemView = itemView else { return }
         if let itemViewIndex = itemViews.index(of: itemView) {
             let success = self.remove(item: itemView.item)
@@ -84,7 +84,7 @@ public class Circle {
         
     }
     
-    public func add(itemView: ItemView?, at originIndex: Int) {
+    func add(itemView: ItemView?, at originIndex: Int) {
         guard let itemView = itemView else { return }
         let item = itemView.item
         if let distanceRange = distanceRange {
@@ -101,7 +101,7 @@ public class Circle {
         }
     }
     
-    public func clear() {
+    func clear() {
         model.clear()
         itemViews.removeAll()
     }

@@ -24,7 +24,7 @@ public final class RadarView: UIView {
     /// The padding between items, the default value is 10
     @IBInspectable public var paddingBetweenItems: CGFloat = circleDefaultPaddingBetweenItems {
         didSet {
-            redrawItems()
+            redrawCircles()
         }
     }
     
@@ -37,7 +37,7 @@ public final class RadarView: UIView {
             // the sublyers are based in the view size, so if the view change the size, we should redraw sublyers
             let viewRadius = min(bounds.midX, bounds.midY)
             minimumCircleRadius = viewRadius > 120 ? 60 : diskRadius + 15
-            redrawItems()
+            redrawCircles()
         }
     }
     
@@ -47,7 +47,7 @@ public final class RadarView: UIView {
             // the sublyers are based in the view size, so if the view change the size, we should redraw sublyers
             let viewRadius = min(bounds.midX, bounds.midY)
             minimumCircleRadius = viewRadius > 120 ? 60 : diskRadius + 15
-            redrawItems()
+            redrawCircles()
         }
     }
     
@@ -262,8 +262,8 @@ public final class RadarView: UIView {
     
     /// Draws disks and circles
     private func drawSublayers() {
-       drawDisks()
-       redrawCircles()
+        drawDisks()
+        redrawCircles()
     }
     
     /// Draw central disk and the disk for the central animation
@@ -280,10 +280,9 @@ public final class RadarView: UIView {
     private func redrawDisks() {
         diskLayer.removeFromSuperlayer()
         centerAnimatedLayer.removeFromSuperlayer()
-        
         drawDisks()
     }
-
+    
     /// Redraws circles by deleting old ones and drawing new ones, this method is called, for example, when the number of circles changed
     func redrawCircles() {
         circleLayers.forEach {
@@ -294,6 +293,7 @@ public final class RadarView: UIView {
         for i in 0 ..< numberOfCircles {
             drawCircle(with: i)
         }
+        redrawItems()
     }
     
     /// Draws the circle by using the index to calculate the radius
@@ -315,7 +315,7 @@ public final class RadarView: UIView {
     
     // MARK: Animation methods
     
-    /// Add animation to central disk and the surrounding circles 
+    /// Add animation to central disk and the surrounding circles
     private func animateSublayers() {
         animateCentralDisk()
         animateCircles()
@@ -357,7 +357,7 @@ extension RadarView {
                 let view = itemView.view
                 view.layer.removeAllAnimations()
                 view.removeFromSuperview()
-                add(itemView.item, using: nil)
+                add(itemView.item)
             }
         }
     }
@@ -528,9 +528,7 @@ extension RadarView {
         let circle = circles[index]
         guard let itemView = circle.itemView(forItem: item) else { return }
         circle.remove(itemView: itemView)
-        let view = itemView.view
-        viewToRemove = view
-        removeWithAnimation(view: view)
+        removeWithAnimation(view: itemView.view)
     }
     
     /// Returns the view of the item

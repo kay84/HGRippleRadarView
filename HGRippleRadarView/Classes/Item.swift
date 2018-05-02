@@ -40,18 +40,6 @@ public class Item {
     
 }
 
-extension Item {
-    
-    // Private Methods
-    
-    private func calculatePosition() {
-        let circleIndex = 1
-        let positionIndex = 3
-        radarPosition = (circleIndex, positionIndex)
-    }
-    
-}
-
 extension Item: Equatable {
     
     public static func == (lhs: Item, rhs: Item) -> Bool {

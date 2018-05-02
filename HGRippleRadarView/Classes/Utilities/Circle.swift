@@ -10,7 +10,7 @@ import Foundation
 public let circleDefaultItemRadius: CGFloat = 10
 public let circleDefaultPaddingBetweenItems: CGFloat = 8
 
-class Circle {
+class Circle: NSObject {
     
     var name: String = "Circle"
     
@@ -35,12 +35,12 @@ class Circle {
     }
     
     public init(itemRadius: CGFloat = circleDefaultItemRadius, paddingBetweenItems: CGFloat = circleDefaultPaddingBetweenItems, origin: CGPoint, radius: CGFloat, distanceRange: ClosedRange<Double>) {
-        assert(radius >= 0, NSLocalizedString("Illegal radius value", comment: ""))
         self.itemRadius = itemRadius
         self.paddingBetweenItems = paddingBetweenItems
         self.origin = origin
-        self.radius = radius
+        self.radius = radius <= 0 ? 16 : radius
         self.distanceRange = distanceRange
+        super.init()
         calculatePositions()
     }
     
@@ -106,6 +106,24 @@ class Circle {
         itemViews.removeAll()
     }
     
+    func rotate(_ angle: Double, _ duration: TimeInterval) {
+        itemViews.forEach { itemView in
+            let layer = itemView.view.layer
+            let path = Geometry.arc(from: layer.position, by: CGFloat(angle), in: self).cgPath
+            
+            if let finalPosition = path.getPathElementsPoints().last {
+                layer.position = finalPosition
+            }
+            let animation = CAKeyframeAnimation.init(keyPath: "position")
+            animation.timingFunction = CAMediaTimingFunction.init(name: kCAMediaTimingFunctionEaseOut)
+            animation.duration = duration
+            animation.path = path
+            animation.isRemovedOnCompletion = false
+            animation.fillMode = kCAFillModeForwards
+            layer.add(animation, forKey: "item-rpx")
+        }
+    }
+    
 }
 
 extension Circle {
@@ -127,6 +145,71 @@ extension Circle {
         guard let item = item else { return false }
         let result = model.remove(item)
         return result
+    }
+    
+}
+
+extension CGPath {
+    
+    func forEach( body: @convention(block) (CGPathElement) -> Void) {
+        typealias Body = @convention(block) (CGPathElement) -> Void
+        let callback: @convention(c) (UnsafeMutableRawPointer, UnsafePointer<CGPathElement>) -> Void = { (info, element) in
+            let body = unsafeBitCast(info, to: Body.self)
+            body(element.pointee)
+        }
+        print(MemoryLayout.size(ofValue: body))
+        let unsafeBody = unsafeBitCast(body, to: UnsafeMutableRawPointer.self)
+        self.apply(info: unsafeBody, function: unsafeBitCast(callback, to: CGPathApplierFunction.self))
+    }
+    
+    func getPathElementsPoints() -> [CGPoint] {
+        var arrayPoints : [CGPoint]! = [CGPoint]()
+        self.forEach { element in
+            switch (element.type) {
+            case CGPathElementType.moveToPoint:
+                arrayPoints.append(element.points[0])
+            case .addLineToPoint:
+                arrayPoints.append(element.points[0])
+            case .addQuadCurveToPoint:
+                arrayPoints.append(element.points[0])
+                arrayPoints.append(element.points[1])
+            case .addCurveToPoint:
+                arrayPoints.append(element.points[0])
+                arrayPoints.append(element.points[1])
+                arrayPoints.append(element.points[2])
+            default: break
+            }
+        }
+        return arrayPoints
+    }
+    
+    func getPathElementsPointsAndTypes() -> ([CGPoint], [CGPathElementType]) {
+        var arrayPoints : [CGPoint]! = [CGPoint]()
+        var arrayTypes : [CGPathElementType]! = [CGPathElementType]()
+        self.forEach { element in
+            switch (element.type) {
+            case CGPathElementType.moveToPoint:
+                arrayPoints.append(element.points[0])
+                arrayTypes.append(element.type)
+            case .addLineToPoint:
+                arrayPoints.append(element.points[0])
+                arrayTypes.append(element.type)
+            case .addQuadCurveToPoint:
+                arrayPoints.append(element.points[0])
+                arrayPoints.append(element.points[1])
+                arrayTypes.append(element.type)
+                arrayTypes.append(element.type)
+            case .addCurveToPoint:
+                arrayPoints.append(element.points[0])
+                arrayPoints.append(element.points[1])
+                arrayPoints.append(element.points[2])
+                arrayTypes.append(element.type)
+                arrayTypes.append(element.type)
+                arrayTypes.append(element.type)
+            default: break
+            }
+        }
+        return (arrayPoints, arrayTypes)
     }
     
 }

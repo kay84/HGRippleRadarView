@@ -35,8 +35,6 @@ public final class RadarView: UIView {
     public override var bounds: CGRect {
         didSet {
             // the sublyers are based in the view size, so if the view change the size, we should redraw sublyers
-            let viewRadius = min(bounds.midX, bounds.midY)
-            minimumCircleRadius = viewRadius > 120 ? 60 : diskRadius + 15
             redrawCircles()
         }
     }
@@ -45,8 +43,6 @@ public final class RadarView: UIView {
     public override var frame: CGRect {
         didSet {
             // the sublyers are based in the view size, so if the view change the size, we should redraw sublyers
-            let viewRadius = min(bounds.midX, bounds.midY)
-            minimumCircleRadius = viewRadius > 120 ? 60 : diskRadius + 15
             redrawCircles()
         }
     }
@@ -69,7 +65,7 @@ public final class RadarView: UIView {
     
     /// the preferable radius of an item
     private var itemRadius: CGFloat {
-        return paddingBetweenCircles / 4
+        return CGFloat(Int(paddingBetweenCircles) / numberOfCircles)
     }
     
     private var currentItemView: ItemView? {
@@ -96,7 +92,7 @@ public final class RadarView: UIView {
     
     /// The duration to animate the central disk
     private var centerAnimationDuration: CFTimeInterval {
-        return CFTimeInterval(animationDuration) * 0.75
+        return CFTimeInterval(animationDuration) * 1.25
     }
     
     /// The duration to animate one circle
@@ -113,28 +109,21 @@ public final class RadarView: UIView {
     /// The timer used to start / stop disk animation
     private var diskAnimationTimer: Timer?
     
-    // MARK: Internal properties
+    private var minimumCircleRadius: CGFloat {
+        return diskRadius + paddingBetweenCircles
+    }
     
     /// The maximum possible radius of circle
     var maxCircleRadius: CGFloat {
         if numberOfCircles == 0 {
             return min(bounds.midX, bounds.midY)
         }
-        return (circlesPadding * CGFloat(numberOfCircles - 1) + minimumCircleRadius)
+        return (paddingBetweenCircles * CGFloat(numberOfCircles - 1) + minimumCircleRadius)
     }
     
     /// the circles surrounding the disk
     var circleLayers = [CAShapeLayer]()
     var circles = [Circle]()
-    
-    /// The padding between circles
-    var circlesPadding: CGFloat {
-        if paddingBetweenCircles != -1 {
-            return paddingBetweenCircles
-        }
-        let availableRadius = min(bounds.width, bounds.height)/2 - (minimumCircleRadius)
-        return  availableRadius / CGFloat(numberOfCircles)
-    }
     
     // MARK: Public Properties
     
@@ -145,7 +134,7 @@ public final class RadarView: UIView {
         }
     }
     
-    @IBInspectable public var maxDistance: Double = 6000 {
+    @IBInspectable public var maxDistance: Double = 1000 {
         didSet {
             redrawDisks()
             redrawCircles()
@@ -153,7 +142,7 @@ public final class RadarView: UIView {
     }
     
     /// The radius of the disk in the view center, the default value is 5
-    @IBInspectable public var diskRadius: CGFloat = 5 {
+    @IBInspectable public var diskRadius: CGFloat = 8 {
         didSet {
             redrawDisks()
             redrawCircles()
@@ -169,9 +158,9 @@ public final class RadarView: UIView {
     }
     
     /// The number of circles to draw around the disk, the default value is 3, if the forcedMaximumCircleRadius is used the number of drawn circles could be less than numberOfCircles
-    @IBInspectable public var numberOfCircles: Int = 4 {
+    @IBInspectable public var numberOfCircles: Int = 3 {
         didSet {
-            redrawCircles()
+            redrawCircles(true)
         }
     }
     
@@ -194,18 +183,8 @@ public final class RadarView: UIView {
     /// The color of the on status of the circle, used for animation
     @IBInspectable public var circleOnColor: UIColor = .rippleWhite
     
-    /// The minimum radius of circles, used to make space between the disk and the first circle, the radius must be grather than 5px , because if not the first circle will not be shown, the default value is 10, it's recommanded to use a value grather than the disk radius if you would like to show circles outside disk
-    @IBInspectable public var minimumCircleRadius: CGFloat = 10 {
-        didSet {
-            if minimumCircleRadius < 5 {
-                minimumCircleRadius = 5
-            }
-            redrawCircles()
-        }
-    }
-    
     /// The duration of the animation, the default value is 0.9
-    @IBInspectable public var animationDuration: CGFloat = 0.9 {
+    @IBInspectable public var animationDuration: CGFloat = 1.2 {
         didSet {
             stopAnimation()
             startAnimation()
@@ -232,9 +211,6 @@ public final class RadarView: UIView {
     }
     
     func setup() {
-        paddingBetweenCircles = 40
-        let viewRadius = min(bounds.midX, bounds.midY)
-        minimumCircleRadius = viewRadius > 120 ? 60 : diskRadius + 15
         drawSublayers()
         animateSublayers()
     }
@@ -246,7 +222,7 @@ public final class RadarView: UIView {
     /// - Parameter index: the index of the circle
     /// - Returns: the radius of the circle
     func radiusOfCircle(at index: Int) -> CGFloat {
-        return (circlesPadding * CGFloat(index)) + minimumCircleRadius
+        return (paddingBetweenCircles * CGFloat(index)) + minimumCircleRadius
     }
     
     /// Lays out subviews.
@@ -270,7 +246,6 @@ public final class RadarView: UIView {
     private func drawDisks() {
         diskLayer = Drawer.diskLayer(radius: diskRadius, origin: bounds.center, color: diskColor.cgColor)
         layer.insertSublayer(diskLayer, at: 0)
-        
         centerAnimatedLayer = Drawer.diskLayer(radius: diskRadius, origin: bounds.center, color: diskColor.cgColor)
         centerAnimatedLayer.opacity = 0.3
         layer.addSublayer(centerAnimatedLayer)
@@ -284,7 +259,7 @@ public final class RadarView: UIView {
     }
     
     /// Redraws circles by deleting old ones and drawing new ones, this method is called, for example, when the number of circles changed
-    func redrawCircles() {
+    func redrawCircles(_ animated: Bool = false) {
         circles.forEach { circle in
             circle.itemViews.forEach { itemView in
                 let view = itemView.view
@@ -299,7 +274,7 @@ public final class RadarView: UIView {
         circleLayers.removeAll()
         circles.removeAll()
         for i in 0 ..< numberOfCircles {
-            drawCircle(with: i)
+            drawCircle(with: i, animated)
         }
         redrawItems()
     }
@@ -307,18 +282,31 @@ public final class RadarView: UIView {
     /// Draws the circle by using the index to calculate the radius
     ///
     /// - Parameter index: the index of the circle
-    private func drawCircle(with index: Int) {
+    private func drawCircle(with index: Int, _ animated: Bool = false) {
         let distanceInterval: Double = (maxDistance - minDistance) / Double(numberOfCircles)
         let minDistanceForCircle = minDistance + Double(index) * distanceInterval
         let maxDistanceForCircle = minDistanceForCircle + distanceInterval
         let radius = radiusOfCircle(at: index)
         if radius > maxCircleRadius { return }
         let origin = bounds.center
-        let circleLayer = Drawer.circleLayer(radius: radius, origin: origin, color: circleOffColor.cgColor)
+        let circleLayer = Drawer.circleLayer(radius: radius, origin: origin, color: animated ? circleOnColor.cgColor : circleOffColor.cgColor)
+        circleLayer.opacity = animated ? 0 : 1
         circleLayer.lineWidth = 2.0
         circleLayers.append(circleLayer)
         self.layer.addSublayer(circleLayer)
         circles.append(Circle(name: "C\(index + 1)", itemRadius: itemRadius, paddingBetweenItems: paddingBetweenItems, origin: origin, radius: radius, distanceRange: (minDistanceForCircle...maxDistanceForCircle)))
+        if animated {
+            let duration: TimeInterval = centerAnimationDuration / Double(numberOfCircles)
+            let delay: TimeInterval = duration * Double(index)
+            let animation = CABasicAnimation.init(keyPath: "opacity")
+            animation.fillMode = kCAFillModeForwards
+            animation.isRemovedOnCompletion = false
+            animation.fromValue = 0
+            animation.toValue = 1
+            animation.beginTime = CACurrentMediaTime() + delay
+            animation.duration = duration
+            circleLayer.add(animation, forKey: "opacity")
+        }
     }
     
     // MARK: Animation methods
@@ -334,10 +322,10 @@ public final class RadarView: UIView {
     @objc private func animateCentralDisk() {
         let maxScale = maxCircleRadius / diskRadius
         let scaleAnimation = Animation.transform(to: maxScale)
-        let alphaAnimation = Animation.opacity(from: 0.3, to: 0.0)
+        let alphaAnimation = Animation.opacity(from: 0.75, to: 0.0)
         let groupAnimation = Animation.group(animations: scaleAnimation, alphaAnimation, duration: centerAnimationDuration)
         centerAnimatedLayer.add(groupAnimation, forKey: nil)
-        self.layer.addSublayer(centerAnimatedLayer)
+        self.layer.insertSublayer(centerAnimatedLayer, at: 0)
     }
     
     /// Animates circles by changing color from off to on color
@@ -437,7 +425,7 @@ extension RadarView {
         viewToRemove = view
         let hideAnimation = Animation.hide()
         hideAnimation.delegate = self
-        view.layer.add(hideAnimation, forKey: nil)
+        view.layer.add(hideAnimation, forKey: "remove-item")
     }
     
     // MARK: manage user interaction
@@ -465,7 +453,7 @@ extension RadarView {
             currentItemView = item
             let itemView = item.view
             self.bringSubview(toFront: itemView)
-            let animation = Animation.opacity(from: 0.3, to: 1.0)
+            let animation = Animation.opacity(from: 0.25, to: 1.0)
             itemView.layer.add(animation, forKey: "opacity")
         } else {
             currentItemView = nil
@@ -489,6 +477,22 @@ extension RadarView: CAAnimationDelegate {
 
 // MARK: public methods
 extension RadarView {
+    
+    public func clear() {
+        layer.removeAllAnimations()
+        circleLayers.forEach { circleLayer in
+            circleLayer.removeAllAnimations()
+            circleLayer.removeFromSuperlayer()
+        }
+        circles.forEach { circle in
+            circle.itemViews.forEach { itemView in
+                itemView.view.layer.removeAllAnimations()
+                itemView.view.layer.removeFromSuperlayer()
+            }
+            circle.clear()
+        }
+        circles.removeAll()
+    }
     
     /// Start the ripple animation
     public func startAnimation() {
@@ -548,6 +552,15 @@ extension RadarView {
         let circle = circles[index]
         guard let itemView = circle.itemView(forItem: item) else { return nil }
         return itemView.view
+    }
+    
+    public func rotate(degrees: Double, with duration: TimeInterval = 1.5, _ completion: (() -> ())? = nil) {
+        circles.forEach { circle in
+            circle.rotate(degrees, duration)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration + 0.1) {
+            completion?()
+        }
     }
     
 }

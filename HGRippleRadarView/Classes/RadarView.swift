@@ -285,6 +285,14 @@ public final class RadarView: UIView {
     
     /// Redraws circles by deleting old ones and drawing new ones, this method is called, for example, when the number of circles changed
     func redrawCircles() {
+        circles.forEach { circle in
+            circle.itemViews.forEach { itemView in
+                let view = itemView.view
+                view.layer.removeAllAnimations()
+                view.removeFromSuperview()
+            }
+            circle.clear()
+        }
         circleLayers.forEach {
             $0.removeFromSuperlayer()
         }

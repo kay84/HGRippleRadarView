@@ -70,19 +70,23 @@ public final class RadarView: UIView {
     
     private var currentItemView: ItemView? {
         didSet {
+            
             if oldValue != nil && currentItemView != nil {
                 delegate?.radarView(radarView: self, didDeselect: oldValue!.item)
-            }
-            else if oldValue != nil && currentItemView == nil {
+            } else if oldValue != nil && currentItemView == nil {
                 delegate?.radarView(radarView: self, didDeselectAllItems: oldValue!.item)
             }
+            
             if currentItemView != nil {
                 delegate?.radarView(radarView: self, didSelect: currentItemView!.item)
             }
+            
         }
     }
     
     // MARK: Private Properties
+    
+    private var indicator: RadarIndicatorView!
     
     /// the center circle used for the scale animation
     private var centerAnimatedLayer: CAShapeLayer!
@@ -211,6 +215,7 @@ public final class RadarView: UIView {
     }
     
     func setup() {
+        setupIndicator()
         drawSublayers()
         animateSublayers()
     }
@@ -234,6 +239,14 @@ public final class RadarView: UIView {
         circleLayers.forEach {
             $0.position = bounds.center
         }
+    }
+    
+    private func setupIndicator() {
+        indicator = RadarIndicatorView(frame: self.bounds)
+        indicator.alpha = 0
+        indicator.indicatorColor = diskColor
+        indicator.backgroundColor = .clear
+        insertSubview(indicator, at: 0)
     }
     
     /// Draws disks and circles
@@ -286,6 +299,7 @@ public final class RadarView: UIView {
         let distanceInterval: Double = (maxDistance - minDistance) / Double(numberOfCircles)
         let minDistanceForCircle = minDistance + Double(index) * distanceInterval
         let maxDistanceForCircle = minDistanceForCircle + distanceInterval
+        if minDistanceForCircle >= maxDistanceForCircle { return }
         let radius = radiusOfCircle(at: index)
         if radius > maxCircleRadius { return }
         let origin = bounds.center
@@ -430,11 +444,6 @@ extension RadarView {
     
     // MARK: manage user interaction
     
-    /// Tells this object that one or more new touches occurred in a view or window.
-    ///
-    /// - Parameters:
-    ///   - touches: A set of UITouch instances that represent the touches for the starting phase of the event
-    ///   - event: The event to which the touches belong.
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         let touch = touches.first
         guard let point = touch?.location(in: self) else { return }
@@ -444,17 +453,18 @@ extension RadarView {
             circle = circles[i]
             if let i = circle?.itemViews.index(where: { return $0.view.frame.contains(point) }) {
                 index = i
-                return
+                break
             }
         }
         if let circle = circle, index >= 0, index < circle.itemViews.count {
             let item = circle.itemViews[index]
-            if item === currentItemView { return }
             currentItemView = item
             let itemView = item.view
             self.bringSubview(toFront: itemView)
-            let animation = Animation.opacity(from: 0.25, to: 1.0)
-            itemView.layer.add(animation, forKey: "opacity")
+            let animation = Animation.transform(from: 1, to: 1.3)
+            animation.autoreverses = true
+            animation.duration = 0.1
+            itemView.layer.add(animation, forKey: "scale")
         } else {
             currentItemView = nil
         }
@@ -502,13 +512,35 @@ extension RadarView {
         let timeInterval = CFTimeInterval(animationDuration) + circleAnimationDuration
         circlesAnimationTimer =  Timer.scheduledTimer(timeInterval: timeInterval, target: self, selector: #selector(animateCircles), userInfo: nil, repeats: true)
         diskAnimationTimer = Timer.scheduledTimer(timeInterval: timeInterval, target: self, selector: #selector(animateCentralDisk), userInfo: nil, repeats: true)
+        startIndicatorAnimation(timeInterval)
+    }
+    
+    public func startIndicatorAnimation(_ delay: TimeInterval = 0) {
+        indicator.alpha = 0
+        indicator.origin = self.center
+        indicator.indicatorColor = diskColor
+        indicator.radius = (self.bounds.width / 2) - paddingBetweenCircles
+        UIView.animate(withDuration: 0.25, delay: delay, animations: {
+            self.indicator.alpha = 1
+        })
+        indicator.startAnimation()
     }
     
     /// Stop the ripple animation
     public func stopAnimation() {
+        stopIndicatorAnimation()
         layer.removeAllAnimations()
         circlesAnimationTimer?.invalidate()
         diskAnimationTimer?.invalidate()
+    }
+    
+    public func stopIndicatorAnimation() {
+        UIView.animate(withDuration: 0.25, animations: {
+            self.indicator.alpha = 0
+        }, completion: { _ in
+            self.indicator.stopAnimation()
+        })
+        
     }
     
     /// Add a list of items to the radar view

@@ -8,6 +8,10 @@
 
 import UIKit
 
+internal func angleToRadians(_ angle: CGFloat) -> CGFloat {
+    return angle.degreesToRadians
+}
+
 extension CGRect {
     
     var center: CGPoint {

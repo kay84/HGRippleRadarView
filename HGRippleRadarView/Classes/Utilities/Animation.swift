@@ -80,8 +80,8 @@ public struct Animation {
     ///
     /// - Returns: a CAKeyframeAnimation object
     public static func hide() -> CAKeyframeAnimation {
-        let hideAnimation = transform(times: [0.0, 0.3, 1.0], values: [1.0, 1.9, 0.0])
-        hideAnimation.duration = 1.2
+        let hideAnimation = transform(times: [0.0, 0.3, 1.0], values: [1.0, 1.5, 0.0])
+        hideAnimation.duration = 0.6
         return hideAnimation
     }
     

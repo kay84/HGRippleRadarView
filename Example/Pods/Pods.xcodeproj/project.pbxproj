@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		055FF8FA64749A26564AB9FAAE349F7F /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA29D6B56B90EB8799E14E6A23A817DC /* Configuration.swift */; };
+		10144D66209B601F00C7C8BE /* RadarIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10144D65209B601E00C7C8BE /* RadarIndicatorView.swift */; };
 		126EEE2720949DB700F03F02 /* Circle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126EEE2620949DB700F03F02 /* Circle.swift */; };
 		126EEE292094A39D00F03F02 /* CircleModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126EEE282094A39D00F03F02 /* CircleModel.swift */; };
 		168A8A31B0EABB6B5BF60E8869DB9546 /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E28A45743B448E3A809A1491C32167 /* Item.swift */; };
@@ -55,6 +56,7 @@
 /* Begin PBXFileReference section */
 		025843694F0974319FF59FAF4BA8E91D /* UIColor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UIColor.swift; sourceTree = "<group>"; };
 		0E77E0C2B66BB0E953DFDB997BF63780 /* HGRippleRadarView-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "HGRippleRadarView-dummy.m"; sourceTree = "<group>"; };
+		10144D65209B601E00C7C8BE /* RadarIndicatorView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RadarIndicatorView.swift; path = HGRippleRadarView/Classes/RadarIndicatorView.swift; sourceTree = "<group>"; };
 		126EEE2620949DB700F03F02 /* Circle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Circle.swift; sourceTree = "<group>"; };
 		126EEE282094A39D00F03F02 /* CircleModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleModel.swift; sourceTree = "<group>"; };
 		1984E78BCA9B21D5DAF647070C74179A /* Pods-HGRippleRadarView_Tests.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = "sourcecode.module-map"; path = "Pods-HGRippleRadarView_Tests.modulemap"; sourceTree = "<group>"; };
@@ -161,8 +163,9 @@
 			children = (
 				D5E28A45743B448E3A809A1491C32167 /* Item.swift */,
 				7C90AA153D41626595BAB94D35D08764 /* ItemView.swift */,
-				4345262F649A41DD6B065AB3F4582D4D /* RadarViewProtocol.swift */,
 				361B225E7A70AEB1B726721006283B7D /* RadarView.swift */,
+				10144D65209B601E00C7C8BE /* RadarIndicatorView.swift */,
+				4345262F649A41DD6B065AB3F4582D4D /* RadarViewProtocol.swift */,
 				014E2D2974EF6AA2C8C614B57B0C9F6E /* Pod */,
 				5F18348BDFD3FE26BDD9D8F35065C480 /* Support Files */,
 				5EC0F182808FBBC77E7A12728F0842B3 /* Utilities */,
@@ -484,6 +487,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E8A6DD1D8185869C616B625EA60A0CF2 /* Animation.swift in Sources */,
+				10144D66209B601F00C7C8BE /* RadarIndicatorView.swift in Sources */,
 				568A4F26270E55AC92BE1F0C17246895 /* Drawer.swift in Sources */,
 				F8B319579B732A9D0886C6D506E1BE67 /* Geometry.swift in Sources */,
 				126EEE292094A39D00F03F02 /* CircleModel.swift in Sources */,

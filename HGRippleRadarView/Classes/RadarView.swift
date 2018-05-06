@@ -65,7 +65,7 @@ public final class RadarView: UIView {
     
     /// the preferable radius of an item
     private var itemRadius: CGFloat {
-        return CGFloat(Int(paddingBetweenCircles) / numberOfCircles)
+        return 18.0
     }
     
     private var currentItemView: ItemView? {
@@ -90,21 +90,25 @@ public final class RadarView: UIView {
     
     /// the center circle used for the scale animation
     private var centerAnimatedLayer: CAShapeLayer!
+    private var centerAnimatedTrackerLayer: CAShapeLayer!
     
-    /// the center disk point
-    private var diskLayer: CAShapeLayer!
-    
-    /// The duration to animate the central disk
-    private var centerAnimationDuration: CFTimeInterval {
-        return CFTimeInterval(animationDuration) * 1.25
+    public var centerView: UIView? {
+        didSet {
+            redrawDisks()
+            redrawCircles()
+        }
     }
     
-    /// The duration to animate one circle
-    private var circleAnimationDuration: CFTimeInterval {
-        if circleLayers.count ==  0 {
-            return CFTimeInterval(animationDuration)
-        }
-        return CFTimeInterval(animationDuration) / CFTimeInterval(circleLayers.count)
+    private var centerViewAnimationDuration: CFTimeInterval {
+        return 0.8
+    }
+    
+    private var firstLayerAnimationDuration: CFTimeInterval {
+        return 0.4
+    }
+    
+    private var secondLayerAnimationDuration: CFTimeInterval {
+        return 0.8
     }
     
     /// The timer used to start / stop circles animation
@@ -116,6 +120,8 @@ public final class RadarView: UIView {
     private var minimumCircleRadius: CGFloat {
         return diskRadius + paddingBetweenCircles
     }
+    
+    private var impactFeedbackGenerator: Any?
     
     /// The maximum possible radius of circle
     var maxCircleRadius: CGFloat {
@@ -156,15 +162,15 @@ public final class RadarView: UIView {
     /// The color of the disk in the view center, the default value is ripplePink color
     @IBInspectable public var diskColor: UIColor = .ripplePink {
         didSet {
-            diskLayer.fillColor = diskColor.cgColor
             centerAnimatedLayer.fillColor = diskColor.cgColor
+            centerAnimatedTrackerLayer.fillColor = diskColor.cgColor
         }
     }
     
     /// The number of circles to draw around the disk, the default value is 3, if the forcedMaximumCircleRadius is used the number of drawn circles could be less than numberOfCircles
     @IBInspectable public var numberOfCircles: Int = 3 {
         didSet {
-            redrawCircles(true)
+            redrawCircles()
         }
     }
     
@@ -187,14 +193,6 @@ public final class RadarView: UIView {
     /// The color of the on status of the circle, used for animation
     @IBInspectable public var circleOnColor: UIColor = .rippleWhite
     
-    /// The duration of the animation, the default value is 0.9
-    @IBInspectable public var animationDuration: CGFloat = 1.2 {
-        didSet {
-            stopAnimation()
-            startAnimation()
-        }
-    }
-    
     
     // MARK: init methods
     
@@ -215,9 +213,9 @@ public final class RadarView: UIView {
     }
     
     func setup() {
+        setupHapticFeedbackGenerator()
         setupIndicator()
         drawSublayers()
-        animateSublayers()
     }
     
     // MARK: Drawing methods
@@ -233,11 +231,20 @@ public final class RadarView: UIView {
     /// Lays out subviews.
     override public func layoutSubviews() {
         super.layoutSubviews()
-        
-        diskLayer.position = bounds.center
+        centerView?.center = bounds.center
         centerAnimatedLayer.position = bounds.center
+        centerAnimatedTrackerLayer.position = bounds.center
         circleLayers.forEach {
             $0.position = bounds.center
+        }
+    }
+    
+    private func setupHapticFeedbackGenerator() {
+        if #available(iOS 10.0, *) {
+            impactFeedbackGenerator = UIImpactFeedbackGenerator(style: .heavy)
+        } else {
+            // Fallback on earlier versions
+            impactFeedbackGenerator = nil
         }
     }
     
@@ -249,30 +256,32 @@ public final class RadarView: UIView {
         insertSubview(indicator, at: 0)
     }
     
-    /// Draws disks and circles
     private func drawSublayers() {
         drawDisks()
         redrawCircles()
     }
     
-    /// Draw central disk and the disk for the central animation
     private func drawDisks() {
-        diskLayer = Drawer.diskLayer(radius: diskRadius, origin: bounds.center, color: diskColor.cgColor)
-        layer.insertSublayer(diskLayer, at: 0)
+        if let centerView = centerView {
+            centerView.center = bounds.center
+            addSubview(centerView)
+        }
         centerAnimatedLayer = Drawer.diskLayer(radius: diskRadius, origin: bounds.center, color: diskColor.cgColor)
-        centerAnimatedLayer.opacity = 0.3
+        centerAnimatedLayer.opacity = 0
         layer.addSublayer(centerAnimatedLayer)
+        centerAnimatedTrackerLayer = Drawer.diskLayer(radius: diskRadius, origin: bounds.center, color: diskColor.cgColor)
+        centerAnimatedTrackerLayer.opacity = 0
+        layer.addSublayer(centerAnimatedTrackerLayer)
     }
     
-    /// Redraws disks by deleting the old ones and drawing a new ones, called for example when the radius changed
     private func redrawDisks() {
-        diskLayer.removeFromSuperlayer()
+        centerView?.removeFromSuperview()
         centerAnimatedLayer.removeFromSuperlayer()
+        centerAnimatedTrackerLayer.removeFromSuperlayer()
         drawDisks()
     }
     
-    /// Redraws circles by deleting old ones and drawing new ones, this method is called, for example, when the number of circles changed
-    func redrawCircles(_ animated: Bool = false) {
+    func redrawCircles() {
         circles.forEach { circle in
             circle.itemViews.forEach { itemView in
                 let view = itemView.view
@@ -287,15 +296,12 @@ public final class RadarView: UIView {
         circleLayers.removeAll()
         circles.removeAll()
         for i in 0 ..< numberOfCircles {
-            drawCircle(with: i, animated)
+            drawCircle(with: i)
         }
         redrawItems()
     }
     
-    /// Draws the circle by using the index to calculate the radius
-    ///
-    /// - Parameter index: the index of the circle
-    private func drawCircle(with index: Int, _ animated: Bool = false) {
+    private func drawCircle(with index: Int) {
         let distanceInterval: Double = (maxDistance - minDistance) / Double(numberOfCircles)
         let minDistanceForCircle = minDistance + Double(index) * distanceInterval
         let maxDistanceForCircle = minDistanceForCircle + distanceInterval
@@ -303,55 +309,67 @@ public final class RadarView: UIView {
         let radius = radiusOfCircle(at: index)
         if radius > maxCircleRadius { return }
         let origin = bounds.center
-        let circleLayer = Drawer.circleLayer(radius: radius, origin: origin, color: animated ? circleOnColor.cgColor : circleOffColor.cgColor)
-        circleLayer.opacity = animated ? 0 : 1
+        let circleLayer = Drawer.circleLayer(radius: radius, origin: origin, color: circleOnColor.cgColor)
+        circleLayer.opacity = 1
         circleLayer.lineWidth = 2.0
         circleLayers.append(circleLayer)
         self.layer.addSublayer(circleLayer)
         circles.append(Circle(name: "C\(index + 1)", itemRadius: itemRadius, paddingBetweenItems: paddingBetweenItems, origin: origin, radius: radius, distanceRange: (minDistanceForCircle...maxDistanceForCircle)))
-        if animated {
-            let duration: TimeInterval = centerAnimationDuration / Double(numberOfCircles)
-            let delay: TimeInterval = duration * Double(index)
-            let animation = CABasicAnimation.init(keyPath: "opacity")
-            animation.fillMode = kCAFillModeForwards
-            animation.isRemovedOnCompletion = false
-            animation.fromValue = 0
-            animation.toValue = 1
-            animation.beginTime = CACurrentMediaTime() + delay
-            animation.duration = duration
-            circleLayer.add(animation, forKey: "opacity")
-        }
     }
     
-    // MARK: Animation methods
+}
+
+private extension RadarView {
     
-    /// Add animation to central disk and the surrounding circles
-    private func animateSublayers() {
+    // Animation Methods
+    
+    func animateSublayers() {
         animateCentralDisk()
-        animateCircles()
         startAnimation()
     }
     
-    /// Animates the central disk by changing the opacitiy and the scale
-    @objc private func animateCentralDisk() {
-        let maxScale = maxCircleRadius / diskRadius
-        let scaleAnimation = Animation.transform(to: maxScale)
-        let alphaAnimation = Animation.opacity(from: 0.75, to: 0.0)
-        let groupAnimation = Animation.group(animations: scaleAnimation, alphaAnimation, duration: centerAnimationDuration)
-        centerAnimatedLayer.add(groupAnimation, forKey: nil)
-        self.layer.insertSublayer(centerAnimatedLayer, at: 0)
-    }
-    
-    /// Animates circles by changing color from off to on color
-    @objc private func animateCircles() {
-        for index in 0 ..< circleLayers.count {
-            let colorAnimation = Animation.color(from: circleOffColor.cgColor, to: circleOnColor.cgColor)
-            colorAnimation.duration = circleAnimationDuration
-            colorAnimation.autoreverses = true
-            colorAnimation.beginTime = CACurrentMediaTime() + CFTimeInterval(circleAnimationDuration * Double(index))
-            circleLayers[index].add(colorAnimation, forKey: "strokeColor")
+    func playHapticIfAvailable(_ delay: TimeInterval) {
+        if #available(iOS 10.0, *) {
+            if let impactFeedbackGenerator = impactFeedbackGenerator as? UIImpactFeedbackGenerator {
+                Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { timer in
+                    impactFeedbackGenerator.prepare()
+                    impactFeedbackGenerator.impactOccurred()
+                }
+            }
         }
     }
+    
+    func animateHeartBeatHaptic() {
+        self.playHapticIfAvailable(0.4)
+        self.playHapticIfAvailable(0.6)
+    }
+    
+    @objc func animateCentralDisk() {
+        let beginTime = CACurrentMediaTime()
+        animateHeartBeatHaptic()
+        if let centerView = centerView {
+            let centerViewAnimation = Animation.transform(times: [0.0, 0.25, 0.5, 0.75, 1], values: [1.0, 1.05, 1.10, 1.05, 1.0], duration: centerViewAnimationDuration)
+            centerViewAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
+            centerViewAnimation.beginTime = beginTime
+            centerView.layer.add(centerViewAnimation, forKey: nil)
+        }
+        let scale: CGFloat = 3.8
+        let scaleAnimation = Animation.transform(to: scale)
+        let alphaAnimation = Animation.opacity(from: 1.0, to: 0.0)
+        let groupAnimation = Animation.group(animations: scaleAnimation, alphaAnimation, duration: firstLayerAnimationDuration)
+        groupAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+        groupAnimation.beginTime = beginTime + 0.25
+        self.layer.insertSublayer(centerAnimatedLayer, at: 0)
+        centerAnimatedLayer.add(groupAnimation, forKey: nil)
+        let trackerScaleAnimation = Animation.transform(to: scale + 1.2)
+        let trackerAlphaAnimation = Animation.opacity(from: 1.0, to: 0.0)
+        let trackerGroupAnimation = Animation.group(animations: trackerScaleAnimation, trackerAlphaAnimation, duration: secondLayerAnimationDuration)
+        trackerGroupAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+        trackerGroupAnimation.beginTime = groupAnimation.beginTime + 0.25
+        self.layer.insertSublayer(centerAnimatedTrackerLayer, at: 1)
+        centerAnimatedTrackerLayer.add(trackerGroupAnimation, forKey: nil)
+    }
+    
 }
 
 extension RadarView {
@@ -422,27 +440,20 @@ extension RadarView {
         let itemView = view ?? Drawer.diskView(radius: itemRadius, origin: origin, color: itemBackgroundColor)
         itemView.center = origin
         itemView.isUserInteractionEnabled = false
-        
         guard let anim = animation else { return itemView }
         let hide = Animation.transform(to: 0.0)
         hide.duration = anim.beginTime - CACurrentMediaTime()
         itemView.layer.add(hide, forKey: nil)
         itemView.layer.add(anim, forKey: nil)
-        
         return itemView
     }
     
-    /// Remove layer from radar view
-    ///
-    /// - Parameter layer: the layer to remove
     private func removeWithAnimation(view: UIView) {
         viewToRemove = view
         let hideAnimation = Animation.hide()
         hideAnimation.delegate = self
         view.layer.add(hideAnimation, forKey: "remove-item")
     }
-    
-    // MARK: manage user interaction
     
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         let touch = touches.first
@@ -474,15 +485,11 @@ extension RadarView {
 
 extension RadarView: CAAnimationDelegate {
     
-    /// Tells the delegate the animation has ended.
-    ///
-    /// - Parameters:
-    ///   - anim: The CAAnimation object that has ended.
-    ///   - flag: A flag indicating whether the animation has completed by reaching the end of its duration.
     public func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
         viewToRemove?.removeFromSuperview()
         viewToRemove = nil
     }
+    
 }
 
 // MARK: public methods
@@ -509,10 +516,9 @@ extension RadarView {
         layer.removeAllAnimations()
         circlesAnimationTimer?.invalidate()
         diskAnimationTimer?.invalidate()
-        let timeInterval = CFTimeInterval(animationDuration) + circleAnimationDuration
-        circlesAnimationTimer =  Timer.scheduledTimer(timeInterval: timeInterval, target: self, selector: #selector(animateCircles), userInfo: nil, repeats: true)
+        let timeInterval = 2.0
         diskAnimationTimer = Timer.scheduledTimer(timeInterval: timeInterval, target: self, selector: #selector(animateCentralDisk), userInfo: nil, repeats: true)
-        startIndicatorAnimation(timeInterval)
+        //startIndicatorAnimation(timeInterval)
     }
     
     public func startIndicatorAnimation(_ delay: TimeInterval = 0) {
@@ -528,7 +534,7 @@ extension RadarView {
     
     /// Stop the ripple animation
     public func stopAnimation() {
-        stopIndicatorAnimation()
+        //stopIndicatorAnimation()
         layer.removeAllAnimations()
         circlesAnimationTimer?.invalidate()
         diskAnimationTimer?.invalidate()
@@ -596,30 +602,3 @@ extension RadarView {
     }
     
 }
-
-extension Drawer {
-    /// Creates a disk layer
-    ///
-    /// - Parameters:
-    ///   - radius: the radius of the disk
-    ///   - origin: the origin of the disk
-    ///   - color: the color of the disk
-    /// - Returns: a disk layer
-    static func diskView(radius: CGFloat, origin: CGPoint, color: UIColor) -> UIView {
-        let frame = CGRect(x: 0, y: 0, width: radius*2, height: radius*2)
-        let view = UIView(frame: frame)
-        view.center = origin
-        view.layer.cornerRadius = radius
-        view.clipsToBounds = true
-        view.backgroundColor = color
-        return view
-    }
-    
-}
-
-
-
-
-
-
-

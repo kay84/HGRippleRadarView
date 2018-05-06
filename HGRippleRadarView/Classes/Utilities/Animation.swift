@@ -21,7 +21,7 @@ public struct Animation {
         let opacityAnimation = CABasicAnimation(keyPath: "opacity")
         opacityAnimation.fromValue = fromValue
         opacityAnimation.toValue = toValue
-        
+        opacityAnimation.isCumulative = true
         return opacityAnimation
     }
     
@@ -72,7 +72,6 @@ public struct Animation {
         transformAnimation.keyTimes = times
         transformAnimation.fillMode = kCAFillModeForwards
         transformAnimation.isRemovedOnCompletion = false
-        
         return transformAnimation
     }
     
@@ -95,7 +94,8 @@ public struct Animation {
         let animationGroup = CAAnimationGroup()
         animationGroup.animations = animations
         animationGroup.duration = duration
-        
+        animationGroup.isRemovedOnCompletion = false
+        animationGroup.fillMode = kCAFillModeForwards
         return animationGroup
     }
 }

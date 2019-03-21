@@ -70,7 +70,7 @@ public struct Animation {
         transformAnimation.duration = duration
         transformAnimation.values = transformValues
         transformAnimation.keyTimes = times
-        transformAnimation.fillMode = kCAFillModeForwards
+        transformAnimation.fillMode = CAMediaTimingFillMode.forwards
         transformAnimation.isRemovedOnCompletion = false
         return transformAnimation
     }
@@ -95,7 +95,7 @@ public struct Animation {
         animationGroup.animations = animations
         animationGroup.duration = duration
         animationGroup.isRemovedOnCompletion = false
-        animationGroup.fillMode = kCAFillModeForwards
+        animationGroup.fillMode = CAMediaTimingFillMode.forwards
         return animationGroup
     }
 }

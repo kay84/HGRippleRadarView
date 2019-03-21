@@ -349,7 +349,7 @@ private extension RadarView {
         animateHeartBeatHaptic()
         if let centerView = centerView {
             let centerViewAnimation = Animation.transform(times: [0.0, 0.25, 0.5, 0.75, 1], values: [1.0, 1.05, 1.10, 1.05, 1.0], duration: centerViewAnimationDuration)
-            centerViewAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
+            centerViewAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
             centerViewAnimation.beginTime = beginTime
             centerView.layer.add(centerViewAnimation, forKey: nil)
         }
@@ -357,14 +357,14 @@ private extension RadarView {
         let scaleAnimation = Animation.transform(to: scale)
         let alphaAnimation = Animation.opacity(from: 1.0, to: 0.0)
         let groupAnimation = Animation.group(animations: scaleAnimation, alphaAnimation, duration: firstLayerAnimationDuration)
-        groupAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+        groupAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
         groupAnimation.beginTime = beginTime + 0.25
         self.layer.insertSublayer(centerAnimatedLayer, at: 0)
         centerAnimatedLayer.add(groupAnimation, forKey: nil)
         let trackerScaleAnimation = Animation.transform(to: scale + 1.2)
         let trackerAlphaAnimation = Animation.opacity(from: 1.0, to: 0.0)
         let trackerGroupAnimation = Animation.group(animations: trackerScaleAnimation, trackerAlphaAnimation, duration: secondLayerAnimationDuration)
-        trackerGroupAnimation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+        trackerGroupAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
         trackerGroupAnimation.beginTime = groupAnimation.beginTime + 0.25
         self.layer.insertSublayer(centerAnimatedTrackerLayer, at: 1)
         centerAnimatedTrackerLayer.add(trackerGroupAnimation, forKey: nil)
@@ -471,7 +471,7 @@ extension RadarView {
             let item = circle.itemViews[index]
             currentItemView = item
             let itemView = item.view
-            self.bringSubview(toFront: itemView)
+            self.bringSubviewToFront(itemView)
             let animation = Animation.transform(from: 1, to: 1.3)
             animation.autoreverses = true
             animation.duration = 0.1
